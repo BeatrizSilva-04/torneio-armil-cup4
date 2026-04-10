@@ -45,8 +45,13 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f9fafb;
-            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
-            background-size: 20px 20px;
+            /* Premium backdrop with depth and lighting */
+            background-image:
+                radial-gradient(at 50% 0%, rgba(17, 24, 39, 0.04) 0px, transparent 60%),
+                radial-gradient(#d1d5db 1px, transparent 1px);
+            background-size: 100% 100vh, 24px 24px;
+            background-attachment: fixed;
+            color: #111827;
         }
 
         @keyframes float {
@@ -157,12 +162,25 @@
             }
         }
 
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .tab-content {
             display: none;
         }
 
         .tab-content.active {
             display: block;
+            animation: fadeUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
         .tab-button {
@@ -296,16 +314,21 @@
         }
 
         .standings-card {
-            background-color: white;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: 1rem;
-            border: 1px solid #e5e7eb;
+            border: 1px solid rgba(255, 255, 255, 0.8);
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .standings-card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            border: 1px solid rgba(255, 255, 255, 1);
+            background: rgba(255, 255, 255, 0.7);
         }
 
         .standings-header {
@@ -329,11 +352,11 @@
             grid-template-columns: 1fr 2fr 1fr 1fr;
             gap: 0.5rem;
             padding: 0.75rem 1rem;
-            background-color: #f9fafb;
+            background: rgba(249, 250, 251, 0.4);
             font-size: 0.875rem;
             font-weight: 500;
             color: #6b7280;
-            border-bottom: 1px solid #f3f4f6;
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
             text-align: center;
         }
 
@@ -348,7 +371,7 @@
         }
 
         .standings-row:hover {
-            background-color: #f9fafb;
+            background-color: rgba(255, 255, 255, 0.6);
         }
 
         .standings-row:last-child {
@@ -447,17 +470,21 @@
             flex-direction: column;
             gap: 0.75rem;
             padding: 1rem;
-            border: 1px solid #e5e7eb;
+            border: 1px solid rgba(255, 255, 255, 0.8);
             border-radius: 0.75rem;
-            background-color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+            animation: fadeUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
         }
 
         .match-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-            border-color: #d1d5db;
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08);
+            border-color: rgba(255, 255, 255, 1);
+            background: rgba(255, 255, 255, 0.8);
         }
 
         .match-header {
