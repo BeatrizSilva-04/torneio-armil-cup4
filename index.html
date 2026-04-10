@@ -165,7 +165,7 @@
         @keyframes fadeUp {
             from {
                 opacity: 0;
-                transform: translateY(15px);
+                transform: translateY(5px);
             }
 
             to {
@@ -180,7 +180,7 @@
 
         .tab-content.active {
             display: block;
-            animation: fadeUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: fadeUp 0.15s ease-out forwards;
         }
 
         .tab-button {
@@ -477,7 +477,7 @@
             -webkit-backdrop-filter: blur(12px);
             transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
-            animation: fadeUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+            animation: fadeUp 0.15s ease-out both;
         }
 
         .match-card:hover {
