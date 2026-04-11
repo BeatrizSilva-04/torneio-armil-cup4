@@ -34,6 +34,9 @@
         window.dbGet = get;
         window.dbOnValue = onValue;
         window.dbUpdate = update;
+        
+        // Notificar que o Firebase está pronto para a entrada ser direta sem pausa
+        window.dispatchEvent(new Event('firebase-ready'));
     </script>
 
     <!-- Tailwind CSS -->
@@ -639,7 +642,7 @@
             <!-- Tournament Title Card -->
             <div class="tournament-title">
                 <div class="main-title">4ª EDIÇÃO ARMIL CUP</div>
-                <div class="date-text">7 de junho</div>
+                <div class="date-text">6 de junho</div>
                 <div class="venue-text">Campo Professor Manuel José Dias - Silvares</div>
                 <div class="categories-text">Petizes, Traquinas e Benjamins</div>
             </div>
@@ -2062,16 +2065,19 @@
         });
 
         // ============= Inicialização =============
-        window.addEventListener('load', function () {
-            // Aguardar que o Firebase esteja disponível
-            setTimeout(() => {
-                if (window.database) {
-                    ['petizes', 'traquinas', 'benjamins'].forEach(cat => listenToCategory(cat));
-                } else {
-                    console.error('Firebase não foi inicializado corretamente');
-                }
-            }, 1000);
-        });
+        function initApp() {
+            if (window.database) {
+                ['petizes', 'traquinas', 'benjamins'].forEach(cat => listenToCategory(cat));
+            } else {
+                console.error('Firebase não foi inicializado corretamente');
+            }
+        }
+
+        if (window.database) {
+            initApp();
+        } else {
+            window.addEventListener('firebase-ready', initApp);
+        }
     </script>
 </body>
 
