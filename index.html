@@ -34,7 +34,7 @@
         window.dbGet = get;
         window.dbOnValue = onValue;
         window.dbUpdate = update;
-        
+
         // Notificar que o Firebase está pronto para a entrada ser direta sem pausa
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
@@ -894,6 +894,59 @@
                 </div>
             </div>
         </div>
+
+        <!-- Edit Scorers Modal -->
+        <div id="scorers-modal" class="modal">
+            <div class="modal-content" style="max-width: 40rem;">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="w-5 h-5">
+                            <circle cx="12" cy="8" r="5"></circle>
+                            <path d="M20 21a8 8 0 0 0-16 0"></path>
+                        </svg>
+                        Gerir Marcadores
+                    </h3>
+                    <p class="text-sm text-gray-500" id="scorers-category-title"></p>
+                </div>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border p-4 rounded-lg bg-gray-50">
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-gray-700">Nome do Atleta</label>
+                            <input type="text" id="new-scorer-name" class="input w-full" placeholder="Ex: João Silva">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-gray-700">Equipa</label>
+                            <select id="new-scorer-team" class="select w-full">
+                                <option value="">Selecionar Equipa</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-gray-700">Número de Golos</label>
+                            <input type="number" id="new-scorer-goals" class="input w-full" placeholder="0" min="1"
+                                value="1">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <button id="add-scorer-btn" class="btn btn-primary w-full">Adicionar Atleta</button>
+                        </div>
+                    </div>
+
+                    <div id="scorers-edit-list" class="max-h-60 overflow-y-auto space-y-2 mt-4">
+                        <!-- Lista de marcadores para edição -->
+                    </div>
+
+                    <div class="flex gap-2 mt-4">
+                        <button id="save-scorers-btn" class="btn btn-primary flex-1">
+                            Guardar Alterações
+                        </button>
+                        <button id="cancel-scorers-btn" class="btn btn-outline flex-1">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -907,11 +960,14 @@
         let isAdminMode = false;
         let editingMatch = null;
         let editingStandings = null;
+        let editingScorersCategory = null;
+        let currentEditScorers = [];
 
         // ============= Dados Iniciais =============
         const initialTournamentData = {
             petizes: {
                 name: "Petizes",
+                scorers: [],
                 groups: {
                     I: ["Armil", "Sousa", "Marinhão", "Fornelos B"],
                     II: ["Ases", "Celorico", "Quinchães", "Fornelos A"],
@@ -1066,6 +1122,7 @@
             },
             traquinas: {
                 name: "Traquinas",
+                scorers: [],
                 groups: {
                     I: ["Armil", "Fornelos B", "Quinchães"],
                     II: ["Fornelos A", "Selho", "Marinhão"]
@@ -1154,6 +1211,7 @@
             },
             benjamins: {
                 name: "Benjamins",
+                scorers: [],
                 groups: {
                     I: ["Armil", "Sousa", "Fornelos", "Quinchães", "Marinhão"]
                 },
@@ -1625,6 +1683,46 @@
                 html += `
                         </div>
 
+                        <!-- Melhores Marcadores -->
+                        <div class="space-y-4">
+                            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-800">
+                                    <circle cx="12" cy="8" r="5"></circle>
+                                    <path d="M20 21a8 8 0 0 0-16 0"></path>
+                                </svg>
+                                Melhores Marcadores
+                            </h2>
+                            <div class="standings-card">
+                                <div class="standings-header flex items-center justify-between">
+                                    <h3 class="standings-title">Top Marcadores</h3>
+                                    ${isAdminMode ? `
+                                        <button class="btn btn-outline btn-sm edit-scorers-btn" data-category="${category}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                                <div class="standings-content">
+                                    <div class="standings-table-header text-sm sm:text-base grid" style="grid-template-columns: 2fr 2fr 1fr; gap: 0.5rem; padding: 0.75rem 1rem;">
+                                        <span>Nome do Atleta</span>
+                                        <span>Equipa</span>
+                                        <span class="text-center">Golos</span>
+                                    </div>
+                                    ${data.scorers && data.scorers.length > 0 ?
+                        data.scorers.sort((a, b) => b.goals - a.goals || a.name.localeCompare(b.name)).map(scorer => `
+                                            <div class="standings-row grid items-center text-sm sm:text-base" style="grid-template-columns: 2fr 2fr 1fr; gap: 0.5rem; padding: 0.75rem 1rem;">
+                                                <span class="font-medium truncate" title="${scorer.name}">${scorer.name}</span>
+                                                <span class="text-gray-600 truncate" title="${scorer.team}">${scorer.team}</span>
+                                                <span class="font-bold text-center text-gray-900">${scorer.goals}</span>
+                                            </div>
+                                        `).join('')
+                        : '<div class="text-center p-6 text-gray-500">Sem marcadores registados</div>'}
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Jogos -->
                         <div class="space-y-4">
                             <h2 class="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -1908,6 +2006,83 @@
                     document.getElementById('standings-modal').classList.add('active');
                 });
             });
+
+            document.querySelectorAll('.edit-scorers-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const category = this.getAttribute('data-category');
+                    editingScorersCategory = category;
+
+                    document.getElementById('scorers-category-title').textContent = tournamentData[category].name;
+
+                    // Update teams select dropdown
+                    const teamSelect = document.getElementById('new-scorer-team');
+                    teamSelect.innerHTML = '<option value="">Equipa</option>';
+                    let categoryTeams = [];
+                    Object.values(tournamentData[category].groups).forEach(teams => {
+                        categoryTeams = categoryTeams.concat(teams);
+                    });
+                    categoryTeams.sort().forEach(t => {
+                        teamSelect.innerHTML += `<option value="${t}">${t}</option>`;
+                    });
+
+                    // Clona a lista de marcadores para edição local antes de salvar
+                    currentEditScorers = [...(tournamentData[category].scorers || [])];
+
+                    renderScorersEditList();
+                    document.getElementById('scorers-modal').classList.add('active');
+                });
+            });
+        }
+
+        // Renderiza lista de edição de marcadores no modal
+        function renderScorersEditList() {
+            const list = document.getElementById('scorers-edit-list');
+            if (currentEditScorers.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500 py-4 font-medium">Nenhum marcador adicionado.</p>';
+                return;
+            }
+
+            let categoryTeams = [];
+            if (editingScorersCategory) {
+                Object.values(tournamentData[editingScorersCategory].groups).forEach(teams => {
+                    categoryTeams = categoryTeams.concat(teams);
+                });
+                categoryTeams.sort();
+            }
+
+            let html = '';
+            currentEditScorers.forEach((scorer, index) => {
+                html += `
+                    <div class="flex gap-2 flex-wrap sm:flex-nowrap items-center p-2 border rounded bg-gray-50">
+                        <input type="text" class="input flex-1 min-w-[100px] edit-scorer-name" data-index="${index}" value="${scorer.name}" placeholder="Nome do Atleta">
+                        <select class="select flex-1 min-w-[100px] edit-scorer-team" data-index="${index}">
+                            <option value="">Equipa</option>
+                            ${categoryTeams.map(t => `<option value="${t}" ${t === scorer.team ? 'selected' : ''}>${t}</option>`).join('')}
+                        </select>
+                        <input type="number" class="input w-16 edit-scorer-goals" data-index="${index}" value="${scorer.goals}" min="1">
+                        <button class="btn btn-destructive btn-sm remove-scorer-btn" data-index="${index}">X</button>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+
+            // Re-bind remover
+            document.querySelectorAll('.remove-scorer-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const idx = parseInt(this.getAttribute('data-index'));
+                    currentEditScorers.splice(idx, 1);
+                    renderScorersEditList();
+                });
+            });
+            // Bind changes to inputs
+            document.querySelectorAll('.edit-scorer-name, .edit-scorer-team, .edit-scorer-goals').forEach(input => {
+                input.addEventListener('input', function () {
+                    const idx = parseInt(this.getAttribute('data-index'));
+                    if (this.classList.contains('edit-scorer-name')) currentEditScorers[idx].name = this.value;
+                    if (this.classList.contains('edit-scorer-team')) currentEditScorers[idx].team = this.value;
+                    if (this.classList.contains('edit-scorer-goals')) currentEditScorers[idx].goals = parseInt(this.value) || 0;
+                });
+            });
         }
 
         // ============= Event Listeners =============
@@ -1991,6 +2166,7 @@
                     this.classList.remove('active');
                     editingMatch = null;
                     editingStandings = null;
+                    editingScorersCategory = null;
                 }
             });
         });
@@ -2055,6 +2231,36 @@
         document.getElementById('cancel-standings-btn').addEventListener('click', function () {
             document.getElementById('standings-modal').classList.remove('active');
             editingStandings = null;
+        });
+
+        // ============= Edit Scorers =============
+        document.getElementById('add-scorer-btn').addEventListener('click', function () {
+            const name = document.getElementById('new-scorer-name').value.trim();
+            const team = document.getElementById('new-scorer-team').value.trim();
+            const goals = parseInt(document.getElementById('new-scorer-goals').value) || 1;
+
+            if (name && team) {
+                currentEditScorers.push({ name, team, goals });
+                document.getElementById('new-scorer-name').value = '';
+                document.getElementById('new-scorer-team').value = '';
+                document.getElementById('new-scorer-goals').value = '1';
+                renderScorersEditList();
+            }
+        });
+
+        document.getElementById('save-scorers-btn').addEventListener('click', function () {
+            if (editingScorersCategory) {
+                const scorersRef = window.dbRef(window.database, `${editingScorersCategory}/scorers`);
+                window.dbSet(scorersRef, currentEditScorers);
+
+                document.getElementById('scorers-modal').classList.remove('active');
+                editingScorersCategory = null;
+            }
+        });
+
+        document.getElementById('cancel-scorers-btn').addEventListener('click', function () {
+            document.getElementById('scorers-modal').classList.remove('active');
+            editingScorersCategory = null;
         });
 
         // ============= Reset Database =============
