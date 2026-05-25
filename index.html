@@ -1278,9 +1278,36 @@
             // Converter para arrays e ordenar
             Object.keys(standings).forEach((group) => {
                 if (!data.manualStandings || !data.manualStandings[group]) {
-                    standings[group] = Object.values(standings[group]).sort(
-                        (a, b) => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga)
-                    );
+                    standings[group] = Object.values(standings[group]).sort((a, b) => {
+                        // 1. Pontos
+                        if (b.points !== a.points) return b.points - a.points;
+                        
+                        // 2. Diferença de golos
+                        const diffA = a.gf - a.ga;
+                        const diffB = b.gf - b.ga;
+                        if (diffB !== diffA) return diffB - diffA;
+                        
+                        // 3. Maior quantidade de golos a favor
+                        if (b.gf !== a.gf) return b.gf - a.gf;
+                        
+                        // 4. Menor quantidade de golos contra
+                        if (a.ga !== b.ga) return a.ga - b.ga;
+                        
+                        // 5. Confronto direto
+                        let headToHeadWinner = 0;
+                        for (const match of data.matches) {
+                            if (match.status === "finished") {
+                                if (match.team1 === a.team && match.team2 === b.team) {
+                                    if (match.score1 > match.score2) headToHeadWinner = -1; // a ganhou
+                                    else if (match.score1 < match.score2) headToHeadWinner = 1; // b ganhou
+                                } else if (match.team1 === b.team && match.team2 === a.team) {
+                                    if (match.score1 > match.score2) headToHeadWinner = 1; // b ganhou
+                                    else if (match.score1 < match.score2) headToHeadWinner = -1; // a ganhou
+                                }
+                            }
+                        }
+                        return headToHeadWinner;
+                    });
                 }
             });
 
