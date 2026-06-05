@@ -252,7 +252,7 @@ if (replaceIndex !== -1 && endIndex !== -1) {
                         html += \`
                             <div class="match-card bg-gradient-to-r from-amber-50 to-yellow-50 border-yellow-300 shadow-sm flex items-center justify-center p-4">
                                 <div class="match-teams text-center text-lg font-bold text-yellow-800">
-                                    🏆 \${ev.match} (\${ev.time})
+                                    🏆 \${ev.match} \${ev.time ? '(' + ev.time + ')' : ''}
                                 </div>
                             </div>
                         \`;
